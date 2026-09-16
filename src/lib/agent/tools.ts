@@ -71,6 +71,18 @@ export const testsInput = z.object({
     .describe("Optional correct solution used to validate the new tests before saving them."),
 });
 
+export const editCodeInput = z.object({
+  edits: z
+    .array(
+      z.object({
+        find: z.string().min(1).max(4000).describe("Exact text to replace (include enough surrounding lines to be unique). Whitespace-sensitive."),
+        replace: z.string().max(4000).describe("Replacement text (empty string deletes)."),
+      }),
+    )
+    .min(1)
+    .max(8),
+});
+
 export const runCodeInput = z.object({
   language: z.enum(["javascript", "python"]).optional().describe("Defaults to the learner's current editor language"),
   source: z.string().max(20000).optional().describe("Code to run. OMIT to run the learner's current editor code as-is."),
@@ -120,6 +132,12 @@ export const TOOLS: Anthropic.ToolUnion[] = [
     description:
       "Replace the test cases of the current (tutor-authored or LeetCode-imported) problem, e.g. when examples couldn't be parsed or you want edge cases. Pass a referenceSolution so the tests are validated.",
     input_schema: jsonSchema(testsInput),
+  },
+  {
+    name: "edit_code",
+    description:
+      "Make targeted edits to the learner's editor code (exact find/replace; each `find` must match exactly once). Prefer this over set_editor_code for fixes, additions, or removing a line — it preserves everything else. Edits are applied in order to the current editor contents.",
+    input_schema: jsonSchema(editCodeInput),
   },
   {
     name: "run_code",
@@ -236,6 +254,29 @@ export async function executeTool(name: string, input: unknown, ctx: ToolContext
       ctx.onProblemSet(problem);
       ctx.emit({ type: "exercise_set", problem });
       return { content: `Replaced tests (${parsed.data.tests.length}).` };
+    }
+
+    case "edit_code": {
+      const parsed = editCodeInput.safeParse(input);
+      if (!parsed.success) return invalid(parsed.error);
+      if (!ctx.editor) return { content: "No editor contents available to edit.", isError: true };
+      let source = ctx.editor.source;
+      const applied: string[] = [];
+      for (const [i, e] of parsed.data.edits.entries()) {
+        const count = source.split(e.find).length - 1;
+        if (count !== 1) {
+          return {
+            content: `Edit ${i + 1} not applied: \`find\` matches ${count} time(s) (must be exactly 1). ${applied.length ? `Earlier edits (${applied.length}) were NOT applied either — resend all.` : ""}\nCurrent code:\n${source}`,
+            isError: true,
+          };
+        }
+        source = source.replace(e.find, () => e.replace);
+        applied.push(e.find.split("\n")[0].slice(0, 40));
+      }
+      const next: EditorState = { language: ctx.editor.language, source };
+      ctx.onEditorSet(next);
+      ctx.emit({ type: "editor_set", editor: next });
+      return { content: `Applied ${applied.length} edit(s). Editor now:\n${source}` };
     }
 
     case "run_code": {
