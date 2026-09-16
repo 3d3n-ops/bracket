@@ -1,0 +1,365 @@
+import type { ProblemSeed } from "../types";
+
+/**
+ * Linked-list / tree / graph / DP problems. List and tree arguments are given
+ * as arrays in tests; the runner prelude builds `ListNode` / `TreeNode`
+ * structures (see `src/lib/runner/prelude.ts`).
+ */
+export const structures: ProblemSeed[] = [
+  {
+    slug: "reverse-linked-list",
+    title: "Reverse Linked List",
+    kind: "dsa",
+    difficulty: "easy",
+    category: "Linked List",
+    tags: ["linked-list", "iteration", "recursion"],
+    promptMd: `Given the head of a singly linked list, reverse it and return the new head.
+
+A \`ListNode\` class with \`val\` and \`next\` is available. Lists are shown as arrays in tests.`,
+    starterCode: {
+      javascript: `// class ListNode { constructor(val, next) { this.val = val; this.next = next ?? null; } }\nfunction reverseList(head) {\n  // your code here\n}\n`,
+      python: `# class ListNode:\n#     def __init__(self, val=0, next=None):\n#         self.val = val\n#         self.next = next\ndef reverse_list(head):\n    # your code here\n    pass\n`,
+    },
+    entryFn: "reverseList",
+    io: { args: ["list"], result: "list" },
+    tests: [
+      { args: [[1, 2, 3, 4, 5]], expected: [5, 4, 3, 2, 1] },
+      { args: [[1, 2]], expected: [2, 1] },
+      { args: [[]], expected: [] },
+    ],
+    hints: [
+      "Walk the list with prev/curr pointers, re-pointing curr.next to prev each step.",
+      "Draw three nodes on the board and step through the pointer changes.",
+    ],
+  },
+  {
+    slug: "merge-two-sorted-lists",
+    title: "Merge Two Sorted Lists",
+    kind: "dsa",
+    difficulty: "easy",
+    category: "Linked List",
+    tags: ["linked-list", "two-pointers"],
+    promptMd: `Merge two sorted linked lists into one sorted list by splicing their nodes together. Return the head.`,
+    starterCode: {
+      javascript: `function mergeTwoLists(list1, list2) {\n  // your code here\n}\n`,
+      python: `def merge_two_lists(list1, list2):\n    # your code here\n    pass\n`,
+    },
+    entryFn: "mergeTwoLists",
+    io: { args: ["list", "list"], result: "list" },
+    tests: [
+      { args: [[1, 2, 4], [1, 3, 4]], expected: [1, 1, 2, 3, 4, 4] },
+      { args: [[], []], expected: [] },
+      { args: [[], [0]], expected: [0] },
+    ],
+    hints: ["A dummy head node makes the splicing loop uniform."],
+  },
+  {
+    slug: "linked-list-cycle",
+    title: "Linked List Cycle",
+    kind: "dsa",
+    difficulty: "easy",
+    category: "Linked List",
+    tags: ["linked-list", "fast-slow-pointers"],
+    promptMd: `Given the head of a list, return \`true\` if it contains a cycle. For this exercise, the input is given as \`[values, pos]\` where \`pos\` is the index the tail links back to (\`-1\` for no cycle). The harness builds the cycle for you.`,
+    starterCode: {
+      javascript: `function hasCycle(head) {\n  // your code here\n}\n`,
+      python: `def has_cycle(head):\n    # your code here\n    pass\n`,
+    },
+    entryFn: "hasCycle",
+    io: { args: ["list"], result: "raw" },
+    tests: [
+      { args: [{ values: [3, 2, 0, -4], cyclePos: 1 }], expected: true },
+      { args: [{ values: [1, 2], cyclePos: 0 }], expected: true },
+      { args: [{ values: [1], cyclePos: -1 }], expected: false },
+    ],
+    hints: ["Floyd's tortoise and hare: a fast pointer moving 2 steps meets a slow one moving 1 step iff there's a cycle."],
+  },
+  {
+    slug: "invert-binary-tree",
+    title: "Invert Binary Tree",
+    kind: "dsa",
+    difficulty: "easy",
+    category: "Trees",
+    tags: ["tree", "recursion", "dfs"],
+    promptMd: `Given the root of a binary tree, invert it (mirror left and right at every node) and return the root.
+
+A \`TreeNode\` class with \`val\`, \`left\`, \`right\` is available. Trees are shown level-order in tests with \`null\` for missing children.`,
+    starterCode: {
+      javascript: `// class TreeNode { constructor(val, left, right) { this.val = val; this.left = left ?? null; this.right = right ?? null; } }\nfunction invertTree(root) {\n  // your code here\n}\n`,
+      python: `# class TreeNode:\n#     def __init__(self, val=0, left=None, right=None): ...\ndef invert_tree(root):\n    # your code here\n    pass\n`,
+    },
+    entryFn: "invertTree",
+    io: { args: ["tree"], result: "tree" },
+    tests: [
+      { args: [[4, 2, 7, 1, 3, 6, 9]], expected: [4, 7, 2, 9, 6, 3, 1] },
+      { args: [[2, 1, 3]], expected: [2, 3, 1] },
+      { args: [[]], expected: [] },
+    ],
+    hints: ["Swap children, then recurse into each. Or do it BFS with a queue."],
+  },
+  {
+    slug: "max-depth-binary-tree",
+    title: "Maximum Depth of Binary Tree",
+    kind: "dsa",
+    difficulty: "easy",
+    category: "Trees",
+    tags: ["tree", "recursion", "dfs"],
+    promptMd: `Return the maximum depth (number of nodes on the longest root-to-leaf path) of a binary tree.`,
+    starterCode: {
+      javascript: `function maxDepth(root) {\n  // your code here\n}\n`,
+      python: `def max_depth(root):\n    # your code here\n    pass\n`,
+    },
+    entryFn: "maxDepth",
+    io: { args: ["tree"], result: "raw" },
+    tests: [
+      { args: [[3, 9, 20, null, null, 15, 7]], expected: 3 },
+      { args: [[1, null, 2]], expected: 2 },
+      { args: [[]], expected: 0 },
+    ],
+    hints: ["depth(node) = 1 + max(depth(left), depth(right)); depth(null) = 0."],
+  },
+  {
+    slug: "validate-bst",
+    title: "Validate Binary Search Tree",
+    kind: "dsa",
+    difficulty: "medium",
+    category: "Trees",
+    tags: ["tree", "bst", "dfs"],
+    promptMd: `Determine whether a binary tree is a valid BST: every node's left subtree contains only smaller values and its right subtree only larger values.`,
+    starterCode: {
+      javascript: `function isValidBST(root) {\n  // your code here\n}\n`,
+      python: `def is_valid_bst(root):\n    # your code here\n    pass\n`,
+    },
+    entryFn: "isValidBST",
+    io: { args: ["tree"], result: "raw" },
+    tests: [
+      { args: [[2, 1, 3]], expected: true },
+      { args: [[5, 1, 4, null, null, 3, 6]], expected: false },
+      { args: [[5, 4, 6, null, null, 3, 7]], expected: false },
+      { args: [[]], expected: true },
+    ],
+    hints: [
+      "Checking only parent vs. child is not enough — a deep node must respect ancestors' bounds.",
+      "Pass (min, max) bounds down the recursion, or check that an in-order traversal is strictly increasing.",
+    ],
+  },
+  {
+    slug: "level-order-traversal",
+    title: "Binary Tree Level Order Traversal",
+    kind: "dsa",
+    difficulty: "medium",
+    category: "Trees",
+    tags: ["tree", "bfs", "queue"],
+    promptMd: `Return the level-order traversal of a binary tree's node values as a list of levels.`,
+    starterCode: {
+      javascript: `function levelOrder(root) {\n  // your code here\n}\n`,
+      python: `def level_order(root):\n    # your code here\n    pass\n`,
+    },
+    entryFn: "levelOrder",
+    io: { args: ["tree"], result: "raw" },
+    tests: [
+      { args: [[3, 9, 20, null, null, 15, 7]], expected: [[3], [9, 20], [15, 7]] },
+      { args: [[1]], expected: [[1]] },
+      { args: [[]], expected: [] },
+    ],
+    hints: ["BFS with a queue; process one full level per outer iteration by snapshotting the queue length."],
+  },
+  {
+    slug: "number-of-islands",
+    title: "Number of Islands",
+    kind: "dsa",
+    difficulty: "medium",
+    category: "Graphs",
+    tags: ["grid", "bfs", "dfs"],
+    promptMd: `Given a 2D grid of \`'1'\` (land) and \`'0'\` (water), count the number of islands (4-directionally connected land).`,
+    starterCode: {
+      javascript: `function numIslands(grid) {\n  // your code here\n}\n`,
+      python: `def num_islands(grid):\n    # your code here\n    pass\n`,
+    },
+    entryFn: "numIslands",
+    tests: [
+      {
+        args: [[
+          ["1", "1", "1", "1", "0"],
+          ["1", "1", "0", "1", "0"],
+          ["1", "1", "0", "0", "0"],
+          ["0", "0", "0", "0", "0"],
+        ]],
+        expected: 1,
+      },
+      {
+        args: [[
+          ["1", "1", "0", "0", "0"],
+          ["1", "1", "0", "0", "0"],
+          ["0", "0", "1", "0", "0"],
+          ["0", "0", "0", "1", "1"],
+        ]],
+        expected: 3,
+      },
+      { args: [[["0"]]], expected: 0 },
+    ],
+    hints: [
+      "Every time you find unvisited land, that's a new island: flood-fill it so it isn't counted again.",
+      "You can mutate the grid to mark visited cells, or keep a separate visited set.",
+    ],
+  },
+  {
+    slug: "course-schedule",
+    title: "Course Schedule",
+    kind: "dsa",
+    difficulty: "medium",
+    category: "Graphs",
+    tags: ["graph", "topological-sort", "cycle-detection"],
+    promptMd: `There are \`numCourses\` courses labeled \`0..numCourses-1\`. \`prerequisites[i] = [a, b]\` means you must take \`b\` before \`a\`. Return \`true\` if it's possible to finish all courses.`,
+    starterCode: {
+      javascript: `function canFinish(numCourses, prerequisites) {\n  // your code here\n}\n`,
+      python: `def can_finish(num_courses, prerequisites):\n    # your code here\n    pass\n`,
+    },
+    entryFn: "canFinish",
+    tests: [
+      { args: [2, [[1, 0]]], expected: true },
+      { args: [2, [[1, 0], [0, 1]]], expected: false },
+      { args: [5, [[1, 4], [2, 4], [3, 1], [3, 2]]], expected: true },
+    ],
+    hints: [
+      "This is cycle detection in a directed graph.",
+      "Kahn's algorithm: repeatedly remove nodes with in-degree 0; if you can't remove all, there's a cycle.",
+    ],
+  },
+  {
+    slug: "clone-graph",
+    title: "Clone Graph",
+    kind: "dsa",
+    difficulty: "medium",
+    category: "Graphs",
+    tags: ["graph", "dfs", "hash-map"],
+    promptMd: `Given an undirected graph as an adjacency list (\`adj[i]\` = neighbors of node \`i\`, 0-indexed), return a deep copy as a new adjacency list of the same shape. For this exercise, work directly on adjacency lists; return a *new* list object with copied neighbor arrays.`,
+    starterCode: {
+      javascript: `function cloneGraph(adj) {\n  // your code here\n}\n`,
+      python: `def clone_graph(adj):\n    # your code here\n    pass\n`,
+    },
+    entryFn: "cloneGraph",
+    tests: [
+      { args: [[[1, 3], [0, 2], [1, 3], [0, 2]]], expected: [[1, 3], [0, 2], [1, 3], [0, 2]] },
+      { args: [[[]]], expected: [[]] },
+      { args: [[]], expected: [] },
+    ],
+    hints: ["Map old node → new node so shared neighbors point to the same clone."],
+  },
+  {
+    slug: "climbing-stairs",
+    title: "Climbing Stairs",
+    kind: "dsa",
+    difficulty: "easy",
+    category: "Dynamic Programming",
+    tags: ["dp", "fibonacci"],
+    promptMd: `You can climb 1 or 2 steps at a time. How many distinct ways can you climb \`n\` steps?`,
+    starterCode: {
+      javascript: `function climbStairs(n) {\n  // your code here\n}\n`,
+      python: `def climb_stairs(n):\n    # your code here\n    pass\n`,
+    },
+    entryFn: "climbStairs",
+    tests: [
+      { args: [2], expected: 2 },
+      { args: [3], expected: 3 },
+      { args: [10], expected: 89 },
+      { args: [1], expected: 1 },
+    ],
+    hints: ["ways(n) = ways(n-1) + ways(n-2). You only need the last two values."],
+  },
+  {
+    slug: "house-robber",
+    title: "House Robber",
+    kind: "dsa",
+    difficulty: "medium",
+    category: "Dynamic Programming",
+    tags: ["dp", "array"],
+    promptMd: `Given \`nums\` (money in each house), you cannot rob two adjacent houses. Return the maximum amount you can rob.`,
+    starterCode: {
+      javascript: `function rob(nums) {\n  // your code here\n}\n`,
+      python: `def rob(nums):\n    # your code here\n    pass\n`,
+    },
+    entryFn: "rob",
+    tests: [
+      { args: [[1, 2, 3, 1]], expected: 4 },
+      { args: [[2, 7, 9, 3, 1]], expected: 12 },
+      { args: [[2, 1, 1, 2]], expected: 4 },
+      { args: [[]], expected: 0 },
+    ],
+    hints: ["dp[i] = max(dp[i-1], dp[i-2] + nums[i]). Roll it into two variables."],
+  },
+  {
+    slug: "coin-change",
+    title: "Coin Change",
+    kind: "dsa",
+    difficulty: "medium",
+    category: "Dynamic Programming",
+    tags: ["dp", "unbounded-knapsack"],
+    promptMd: `Given coin denominations and an \`amount\`, return the fewest coins needed to make that amount, or \`-1\` if impossible. You have unlimited coins of each kind.`,
+    starterCode: {
+      javascript: `function coinChange(coins, amount) {\n  // your code here\n}\n`,
+      python: `def coin_change(coins, amount):\n    # your code here\n    pass\n`,
+    },
+    entryFn: "coinChange",
+    tests: [
+      { args: [[1, 2, 5], 11], expected: 3 },
+      { args: [[2], 3], expected: -1 },
+      { args: [[1], 0], expected: 0 },
+      { args: [[186, 419, 83, 408], 6249], expected: 20 },
+    ],
+    hints: [
+      "Greedy fails (try coins [1,3,4] with amount 6). Think bottom-up.",
+      "dp[a] = 1 + min(dp[a - c]) over coins c ≤ a; dp[0] = 0.",
+    ],
+  },
+  {
+    slug: "longest-increasing-subsequence",
+    title: "Longest Increasing Subsequence",
+    kind: "dsa",
+    difficulty: "medium",
+    category: "Dynamic Programming",
+    tags: ["dp", "binary-search"],
+    promptMd: `Return the length of the longest strictly increasing subsequence of \`nums\`.`,
+    starterCode: {
+      javascript: `function lengthOfLIS(nums) {\n  // your code here\n}\n`,
+      python: `def length_of_lis(nums):\n    # your code here\n    pass\n`,
+    },
+    entryFn: "lengthOfLIS",
+    tests: [
+      { args: [[10, 9, 2, 5, 3, 7, 101, 18]], expected: 4 },
+      { args: [[0, 1, 0, 3, 2, 3]], expected: 4 },
+      { args: [[7, 7, 7, 7]], expected: 1 },
+    ],
+    hints: [
+      "O(n²): dp[i] = 1 + max(dp[j]) for j < i with nums[j] < nums[i].",
+      "O(n log n): keep a 'tails' array and binary-search the insertion point for each number.",
+    ],
+  },
+  {
+    slug: "lru-cache",
+    title: "LRU Cache",
+    kind: "dsa",
+    difficulty: "medium",
+    category: "Design",
+    tags: ["design", "hash-map", "doubly-linked-list"],
+    promptMd: `Design a Least-Recently-Used cache with \`get(key)\` and \`put(key, value)\`, both O(1). When capacity is exceeded, evict the least recently used entry.
+
+For testing, implement a single function \`runLRU(capacity, ops)\` where \`ops\` is a list of \`["get", key]\` / \`["put", key, value]\`. Return the list of results of the \`get\` calls in order (\`-1\` when missing).`,
+    starterCode: {
+      javascript: `class LRUCache {\n  constructor(capacity) {\n    // your code here\n  }\n  get(key) {}\n  put(key, value) {}\n}\n\nfunction runLRU(capacity, ops) {\n  const cache = new LRUCache(capacity);\n  const out = [];\n  for (const op of ops) {\n    if (op[0] === "get") out.push(cache.get(op[1]));\n    else cache.put(op[1], op[2]);\n  }\n  return out;\n}\n`,
+      python: `class LRUCache:\n    def __init__(self, capacity):\n        # your code here\n        pass\n\n    def get(self, key):\n        pass\n\n    def put(self, key, value):\n        pass\n\n\ndef run_lru(capacity, ops):\n    cache = LRUCache(capacity)\n    out = []\n    for op in ops:\n        if op[0] == "get":\n            out.append(cache.get(op[1]))\n        else:\n            cache.put(op[1], op[2])\n    return out\n`,
+    },
+    entryFn: "runLRU",
+    tests: [
+      {
+        args: [2, [["put", 1, 1], ["put", 2, 2], ["get", 1], ["put", 3, 3], ["get", 2], ["put", 4, 4], ["get", 1], ["get", 3], ["get", 4]]],
+        expected: [1, -1, -1, 3, 4],
+      },
+      { args: [1, [["put", 2, 1], ["get", 2], ["put", 3, 2], ["get", 2], ["get", 3]]], expected: [1, -1, 2] },
+    ],
+    hints: [
+      "A hash map gives O(1) lookup; what gives O(1) move-to-front and evict-from-back?",
+      "A doubly linked list with sentinel head/tail nodes. (In JS, an insertion-ordered Map can also work.)",
+    ],
+  },
+];
