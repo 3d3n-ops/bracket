@@ -62,14 +62,21 @@ export async function* runTurn(input: TurnInput, signal?: AbortSignal): AsyncGen
   // 3. Agent loop.
   const queue: ChatEvent[] = [];
   let editorSet: EditorState | null = null;
+  let editor: EditorState | null = input.code;
   const ctx = {
     userId,
     sessionId: session.id,
     get problem() {
       return problem;
     },
+    get editor() {
+      return editor;
+    },
     emit: (e: ChatEvent) => queue.push(e),
-    onEditorSet: (e: EditorState) => (editorSet = e),
+    onEditorSet: (e: EditorState) => {
+      editorSet = e;
+      editor = e;
+    },
     onProblemSet: (p: Problem) => (problem = p),
   };
   let lastMessageId = "";

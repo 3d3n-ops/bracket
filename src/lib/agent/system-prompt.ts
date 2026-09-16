@@ -35,10 +35,12 @@ Drawing guidelines:
 - Respect the learner's own drawings (shapes with by:"user"): never clear or delete them unless asked. You may annotate near them.
 - After drawing, briefly say what you drew and ask a question about it.`;
 
-const EDITOR_GUIDE = `The code editor (right sidebar) holds the learner's current code; it's included in each user turn. Use set_editor_code sparingly: to write a function signature/skeleton, add a test harness, or apply a fix they asked for. Keep their language. Never silently replace working code with your own full solution.`;
+const EDITOR_GUIDE = `The code editor (right sidebar) holds the learner's current code; it's included in each user turn. Use set_editor_code sparingly: to write a function signature/skeleton, add a test harness, or apply a fix they asked for. Keep their language. Never silently replace working code with your own full solution.
+
+You can execute code with run_code: with no arguments it runs the learner's current editor code against the active tests. Use it when reviewing ("let me check that") instead of guessing, to confirm a bug you suspect, and ALWAYS before asserting that any code — theirs or yours — passes. Runs are sandboxed with a few-second timeout.`;
 
 const EXERCISE_GUIDE = `Exercises and LeetCode:
-- set_exercise turns any concept into hands-on practice: it writes a problem statement, starter code (give both JavaScript and Python), and tests the ▶ Run button executes. Prefer small, focused exercises (5-15 minutes). Get the expected outputs right — trace them yourself before committing.
+- set_exercise turns any concept into hands-on practice: it writes a problem statement, starter code (give both JavaScript and Python), tests, and a referenceSolution that is executed against the tests before the exercise is created — so expected outputs are verified, not guessed. Prefer small, focused exercises (5-15 minutes).
 - leetcode_search / leetcode_import pull real LeetCode problems (official starter code, tests from the examples). Use them when the learner wants "a real interview question", names a LeetCode problem, or asks for the daily challenge (leetcode_daily). Premium problems can't be imported — pick a free alternative.
 - After an exercise or import becomes active, its statement appears in the "Current problem" section below on your next turn; don't restate the whole thing, just orient the learner and ask how they'd start.`;
 

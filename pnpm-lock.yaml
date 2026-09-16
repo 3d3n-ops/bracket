@@ -37,7 +37,10 @@ importers:
         version: 16.3.5(@babel/core@7.29.7)(@types/node@20.19.43)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       openai:
         specifier: ^7.15.0
-        version: 7.15.0(zod@4.6.5)
+        version: 7.15.0(ws@8.21.3)(zod@4.6.5)
+      pyodide:
+        specifier: 0.28.3
+        version: 0.28.3
       react:
         specifier: 19.2.8
         version: 19.2.8
@@ -50,6 +53,9 @@ importers:
       remark-gfm:
         specifier: ^4.0.1
         version: 4.0.1
+      server-only:
+        specifier: ^0.0.1
+        version: 0.0.1
       tldraw:
         specifier: ^5.4.2
         version: 5.4.2(@floating-ui/dom@1.8.0)(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -4093,6 +4099,10 @@ packages:
     resolution: {integrity: sha512-vYt7UD1U9Wg6138shLtLOvdAu+8DsC/ilFtEVHcH+wydcSpNE20AfSOduf6MkRFahL5FY7X1oU7nKVZFtfq8Fg==}
     engines: {node: '>=6'}
 
+  pyodide@0.28.3:
+    resolution: {integrity: sha512-rtCsyTU55oNGpLzSVuAd55ZvruJDEX8o6keSdWKN9jPeBVSNlynaKFG7eRqkiIgU7i2M6HEgYtm0atCEQX3u4A==}
+    engines: {node: '>=18.0.0'}
+
   queue-microtask@1.2.3:
     resolution: {integrity: sha512-NuaNSa6flKT5JaSYQzJok04JzTL1CA6aGhv5rfLW3PgqA+M2ChpZQnAC8h8i4ZFkBS8X5RqkDBHA7r4hej3K9A==}
 
@@ -4240,6 +4250,9 @@ packages:
     resolution: {integrity: sha512-Y7/KDsb8LjooZpwaqGyulO6DQlksgCncchHGk+sZIY4SBvUocMBEFH5Ur1fI4dV+Jvl0w6cjvucaIi40puRioA==}
     engines: {node: '>=10'}
     hasBin: true
+
+  server-only@0.0.1:
+    resolution: {integrity: sha512-qepMx2JxAa5jjfzxG79yPPq+8BuFToHd1hm7kI+Z4zAq1ftQiP7HcxMhDDItrbtwVeLg/cY2JnKnrcFkmiswNA==}
 
   set-function-length@1.2.2:
     resolution: {integrity: sha512-pgRc4hJ4/sNjWCSS9AmnS40x3bNMDTknHgL5UaMBTMyJnU90EgWh1Rz+MC9eFu4BuN/UwZjKQuY/1v3rM7HMfg==}
@@ -4571,6 +4584,18 @@ packages:
   word-wrap@1.2.5:
     resolution: {integrity: sha512-BN22B5eaMMI9UMtjrGd5g5eCYPpCPDUy0FJXbYsaT5zYxjFOckS53SQDE3pWkVoWpHXVb3BrYcEN4Twa55B5cA==}
     engines: {node: '>=0.10.0'}
+
+  ws@8.21.3:
+    resolution: {integrity: sha512-201TZ/kPWxoPr/OKWjquZR1SWKXcvxdH+e1xrx89b3YbmzLMFCLfnaG1HFIgWzJOEWZ7MvpK++odZufgYR50Rw==}
+    engines: {node: '>=10.0.0'}
+    peerDependencies:
+      bufferutil: ^4.0.1
+      utf-8-validate: '>=5.0.2'
+    peerDependenciesMeta:
+      bufferutil:
+        optional: true
+      utf-8-validate:
+        optional: true
 
   yallist@3.1.1:
     resolution: {integrity: sha512-a4UGQaWPH59mOXUYnAG2ewncQS4i4F43Tv3JoAM+s2VDAmS9NsK8GpDMLrCHPksFT7h3K6TOoUNn2pb7RoXx4g==}
@@ -8701,8 +8726,9 @@ snapshots:
       define-properties: 1.2.1
       es-object-atoms: 1.1.2
 
-  openai@7.15.0(zod@4.6.5):
+  openai@7.15.0(ws@8.21.3)(zod@4.6.5):
     optionalDependencies:
+      ws: 8.21.3
       zod: 4.6.5
 
   optionator@0.9.4:
@@ -8872,6 +8898,13 @@ snapshots:
       prosemirror-transform: 1.12.1
 
   punycode@2.3.1: {}
+
+  pyodide@0.28.3:
+    dependencies:
+      ws: 8.21.3
+    transitivePeerDependencies:
+      - bufferutil
+      - utf-8-validate
 
   queue-microtask@1.2.3: {}
 
@@ -9110,6 +9143,8 @@ snapshots:
   semver@6.3.1: {}
 
   semver@7.8.5: {}
+
+  server-only@0.0.1: {}
 
   set-function-length@1.2.2:
     dependencies:
@@ -9590,6 +9625,8 @@ snapshots:
       isexe: 2.0.0
 
   word-wrap@1.2.5: {}
+
+  ws@8.21.3: {}
 
   yallist@3.1.1: {}
 

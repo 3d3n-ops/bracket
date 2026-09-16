@@ -7,6 +7,8 @@ import { boardOpsSchema, COLORS } from "@/lib/board/ops";
 import { saveMemory } from "@/lib/memory/retrieve";
 import { getDaily, searchProblems } from "@/lib/leetcode/client";
 import { importLeetCodeProblem, LeetCodeImportError } from "@/lib/leetcode/import";
+import { runOnServer } from "@/lib/runner/server";
+import type { RunRequest, RunResult } from "@/lib/runner/types";
 import type { ChatEvent } from "./events";
 
 /* ------------------------------------------------------------------ */
@@ -56,9 +58,25 @@ export const exerciseInput = z.object({
   hints: z.array(z.string().max(300)).max(4).optional(),
   /** Switch the editor to this language (use the learner's preferred one). */
   language: z.enum(["javascript", "python"]).optional(),
+  referenceSolution: z
+    .object({ javascript: z.string().max(6000).optional(), python: z.string().max(6000).optional() })
+    .describe("A correct solution in at least one language. It is executed against `tests` before the exercise is created; the exercise is rejected if any test fails."),
 });
 
-export const testsInput = z.object({ tests: z.array(testCase).min(1).max(12) });
+export const testsInput = z.object({
+  tests: z.array(testCase).min(1).max(12),
+  referenceSolution: z
+    .object({ javascript: z.string().max(6000).optional(), python: z.string().max(6000).optional() })
+    .optional()
+    .describe("Optional correct solution used to validate the new tests before saving them."),
+});
+
+export const runCodeInput = z.object({
+  language: z.enum(["javascript", "python"]).optional().describe("Defaults to the learner's current editor language"),
+  source: z.string().max(20000).optional().describe("Code to run. OMIT to run the learner's current editor code as-is."),
+  tests: z.array(testCase).max(12).optional().describe("Tests to run. OMIT to use the active problem's tests."),
+  entryFn: z.string().optional().describe("Defaults to the active problem's entry function"),
+});
 
 export const lcSearchInput = z.object({
   query: z.string().max(80).optional().describe("Keywords in the title"),
@@ -94,13 +112,20 @@ export const TOOLS: Anthropic.ToolUnion[] = [
   {
     name: "set_exercise",
     description:
-      "Create a hands-on coding exercise and make it the session's active problem: the editor gets the starter code and ▶ Run executes your tests. Use in learn/freestyle sessions when it's time to practice. Tests must be correct — double-check expected outputs.",
+      "Create a hands-on coding exercise and make it the session's active problem: the editor gets the starter code and ▶ Run executes your tests. Your referenceSolution is executed against the tests first; if anything fails you get the failures back and nothing is created — fix and retry.",
     input_schema: jsonSchema(exerciseInput),
   },
   {
     name: "set_tests",
-    description: "Replace the test cases of the current (tutor-authored or LeetCode-imported) problem, e.g. when examples couldn't be parsed or you want edge cases.",
+    description:
+      "Replace the test cases of the current (tutor-authored or LeetCode-imported) problem, e.g. when examples couldn't be parsed or you want edge cases. Pass a referenceSolution so the tests are validated.",
     input_schema: jsonSchema(testsInput),
+  },
+  {
+    name: "run_code",
+    description:
+      "Execute code on the server and get test results/stdout/errors. With no arguments it runs the learner's current editor code against the active problem's tests — use this to check their work without making them press Run, or to verify a fix or a solution of your own before showing it. Never claim code passes without running it.",
+    input_schema: jsonSchema(runCodeInput),
   },
   {
     name: "leetcode_search",
@@ -133,6 +158,8 @@ export type ToolContext = {
   userId: string;
   sessionId: string;
   problem: Problem | null;
+  /** The learner's editor contents at the start of the turn (kept current when the tutor edits it). */
+  editor: EditorState | null;
   emit: (e: ChatEvent) => void;
   onEditorSet: (e: EditorState) => void;
   onProblemSet: (p: Problem) => void;
@@ -172,6 +199,8 @@ export async function executeTool(name: string, input: unknown, ctx: ToolContext
       const parsed = exerciseInput.safeParse(input);
       if (!parsed.success) return invalid(parsed.error);
       const x = parsed.data;
+      const verdict = await verifyTests(x.referenceSolution, x.tests, x.entryFn, x.io ?? null);
+      if (verdict) return { content: `Exercise NOT created — the reference solution fails its own tests:\n${verdict}`, isError: true };
       const [problem] = await db
         .insert(problems)
         .values({
@@ -199,10 +228,27 @@ export async function executeTool(name: string, input: unknown, ctx: ToolContext
       if (!parsed.success) return invalid(parsed.error);
       if (!ctx.problem) return { content: "No active problem to attach tests to — use set_exercise first.", isError: true };
       if (ctx.problem.source === "seed") return { content: "Tests of built-in problems are fixed.", isError: true };
+      if (parsed.data.referenceSolution) {
+        const verdict = await verifyTests(parsed.data.referenceSolution, parsed.data.tests, ctx.problem.entryFn ?? "", ctx.problem.io);
+        if (verdict) return { content: `Tests NOT saved — the reference solution fails them:\n${verdict}`, isError: true };
+      }
       const [problem] = await db.update(problems).set({ tests: parsed.data.tests }).where(eq(problems.id, ctx.problem.id)).returning();
       ctx.onProblemSet(problem);
       ctx.emit({ type: "exercise_set", problem });
       return { content: `Replaced tests (${parsed.data.tests.length}).` };
+    }
+
+    case "run_code": {
+      const parsed = runCodeInput.safeParse(input);
+      if (!parsed.success) return invalid(parsed.error);
+      const x = parsed.data;
+      const language = x.language ?? ctx.editor?.language ?? "javascript";
+      const source = x.source ?? (language === ctx.editor?.language ? ctx.editor?.source : undefined);
+      if (!source?.trim()) return { content: "Nothing to run: the editor is empty and no source was given.", isError: true };
+      const tests = x.tests ?? ctx.problem?.tests ?? [];
+      const req: RunRequest = { language, source, tests, entryFn: x.entryFn ?? ctx.problem?.entryFn ?? null, io: ctx.problem?.io ?? null };
+      const r = await runOnServer(req);
+      return { content: formatRun(r, x.source ? "your code" : "the learner's editor code") };
     }
 
     case "leetcode_search": {
@@ -257,6 +303,45 @@ export async function executeTool(name: string, input: unknown, ctx: ToolContext
     default:
       return { content: `Unknown tool ${name}`, isError: true };
   }
+}
+
+/** Runs a reference solution against tests; returns a failure report or null when everything passes. */
+async function verifyTests(
+  reference: { javascript?: string; python?: string },
+  tests: RunRequest["tests"],
+  entryFn: string,
+  io: RunRequest["io"],
+): Promise<string | null> {
+  const langs = (["javascript", "python"] as const).filter((l) => reference[l]?.trim());
+  if (!langs.length) return "No reference solution provided.";
+  const reports: string[] = [];
+  for (const language of langs) {
+    const r = await runOnServer({ language, source: reference[language]!, tests, entryFn, io });
+    const bad = r.tests.filter((t) => !t.passed);
+    if (r.error || bad.length) reports.push(`[${language}] ${formatRun(r, "reference solution")}`);
+  }
+  return reports.length ? reports.join("\n") : null;
+}
+
+function formatRun(r: RunResult, what: string): string {
+  const lines: string[] = [];
+  if (r.error) lines.push(`Run of ${what} failed: ${r.error.slice(0, 600)}`);
+  if (r.tests.length) {
+    const passed = r.tests.filter((t) => t.passed).length;
+    lines.push(`${what}: ${passed}/${r.tests.length} tests passed (${r.durationMs} ms)`);
+    for (const t of r.tests.filter((x) => !x.passed).slice(0, 5)) {
+      lines.push(
+        t.error
+          ? `  ✗ ${t.name}: ${t.error.split("\n").filter(Boolean).slice(-2).join(" | ").slice(0, 300)}`
+          : `  ✗ ${t.name}: expected ${JSON.stringify(t.expected)}, got ${JSON.stringify(t.actual)}`,
+      );
+    }
+  } else if (!r.error) {
+    lines.push(`${what} ran without tests (${r.durationMs} ms).`);
+  }
+  if (r.stdout) lines.push(`stdout: ${r.stdout.slice(0, 500)}`);
+  if (r.stderr) lines.push(`stderr: ${r.stderr.slice(0, 300)}`);
+  return lines.join("\n");
 }
 
 async function attachProblem(ctx: ToolContext, problem: Problem, language?: "javascript" | "python") {

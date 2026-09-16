@@ -1,6 +1,6 @@
 /// <reference lib="webworker" />
 import { deepEqual } from "./compare";
-import { PY_PRELUDE, camelToSnake } from "./prelude";
+import { PY_HARNESS, PY_PRELUDE, camelToSnake } from "./prelude";
 import type { RunResult, TestOutcome, WorkerIn, WorkerOut } from "./types";
 
 // 0.28.x (Python 3.13) is the last line that loads inside a classic worker;
@@ -33,45 +33,6 @@ function getPyodide() {
   return pyodideP;
 }
 
-// Harness that runs one test and returns a JSON string.
-const HARNESS = `
-import json, traceback
-
-__camel_name = ""
-
-def __run_test(entry_name, args_json, arg_kinds, result_kind):
-    args = json.loads(args_json)
-    conv = []
-    for i, a in enumerate(args):
-        k = arg_kinds[i] if i < len(arg_kinds) else "raw"
-        if k == "list":
-            conv.append(__array_to_list(a))
-        elif k == "tree":
-            conv.append(__array_to_tree(a))
-        elif k == "list[]":
-            conv.append([__array_to_list(x) for x in a])
-        elif k == "tree[]":
-            conv.append([__array_to_tree(x) for x in a])
-        else:
-            conv.append(a)
-    fn = globals().get(entry_name)
-    if fn is None:
-        # LeetCode style: method on a Solution class (camelCase name).
-        sol = globals().get("Solution")
-        for cand in (entry_name, __camel_name):
-            if sol is not None and hasattr(sol, cand):
-                fn = getattr(sol(), cand)
-                break
-    if fn is None:
-        raise NameError(f"Function '{entry_name}' is not defined (also looked for Solution.{__camel_name}).")
-    out = fn(*conv)
-    if result_kind == "list":
-        out = __list_to_array(out)
-    elif result_kind == "tree":
-        out = __tree_to_array(out)
-    return json.dumps(out, default=lambda o: list(o) if isinstance(o, (set, tuple)) else str(o))
-`;
-
 self.onmessage = async (e: MessageEvent<WorkerIn>) => {
   if (e.data.type !== "run") return;
   const { source, tests, entryFn, io, language } = e.data.req;
@@ -86,7 +47,7 @@ self.onmessage = async (e: MessageEvent<WorkerIn>) => {
     py.setStderr({ batched: (s) => err.push(s) });
 
     py.runPython(PY_PRELUDE);
-    py.runPython(HARNESS);
+    py.runPython(PY_HARNESS);
     py.runPython(source);
 
     if (tests.length) {

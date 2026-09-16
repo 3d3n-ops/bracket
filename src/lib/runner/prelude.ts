@@ -124,6 +124,46 @@ def __tree_to_array(root):
     return out
 `;
 
+/** Python harness: runs one test and returns the result as a JSON string. */
+export const PY_HARNESS = `
+
+import json, traceback
+
+__camel_name = ""
+
+def __run_test(entry_name, args_json, arg_kinds, result_kind):
+    args = json.loads(args_json)
+    conv = []
+    for i, a in enumerate(args):
+        k = arg_kinds[i] if i < len(arg_kinds) else "raw"
+        if k == "list":
+            conv.append(__array_to_list(a))
+        elif k == "tree":
+            conv.append(__array_to_tree(a))
+        elif k == "list[]":
+            conv.append([__array_to_list(x) for x in a])
+        elif k == "tree[]":
+            conv.append([__array_to_tree(x) for x in a])
+        else:
+            conv.append(a)
+    fn = globals().get(entry_name)
+    if fn is None:
+        # LeetCode style: method on a Solution class (camelCase name).
+        sol = globals().get("Solution")
+        for cand in (entry_name, __camel_name):
+            if sol is not None and hasattr(sol, cand):
+                fn = getattr(sol(), cand)
+                break
+    if fn is None:
+        raise NameError(f"Function '{entry_name}' is not defined (also looked for Solution.{__camel_name}).")
+    out = fn(*conv)
+    if result_kind == "list":
+        out = __list_to_array(out)
+    elif result_kind == "tree":
+        out = __tree_to_array(out)
+    return json.dumps(out, default=lambda o: list(o) if isinstance(o, (set, tuple)) else str(o))
+`;
+
 /** twoSum → two_sum */
 export function camelToSnake(name: string) {
   return name.replace(/([a-z0-9])([A-Z])/g, "$1_$2").replace(/([A-Z]+)([A-Z][a-z])/g, "$1_$2").toLowerCase();
