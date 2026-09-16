@@ -83,6 +83,19 @@ export const editCodeInput = z.object({
     .max(8),
 });
 
+export const annotateInput = z.object({
+  annotations: z
+    .array(
+      z.object({
+        line: z.number().int().min(1).describe("1-based line number in the learner's current editor code"),
+        text: z.string().min(1).max(200).describe("Short note shown under that line"),
+        severity: z.enum(["error", "warning", "hint", "ok"]),
+      }),
+    )
+    .max(12)
+    .describe("Send an empty list to clear all notes"),
+});
+
 export const runCodeInput = z.object({
   language: z.enum(["javascript", "python"]).optional().describe("Defaults to the learner's current editor language"),
   source: z.string().max(20000).optional().describe("Code to run. OMIT to run the learner's current editor code as-is."),
@@ -138,6 +151,12 @@ export const TOOLS: Anthropic.ToolUnion[] = [
     description:
       "Make targeted edits to the learner's editor code (exact find/replace; each `find` must match exactly once). Prefer this over set_editor_code for fixes, additions, or removing a line — it preserves everything else. Edits are applied in order to the current editor contents.",
     input_schema: jsonSchema(editCodeInput),
+  },
+  {
+    name: "annotate_code",
+    description:
+      "Pin short review notes to specific lines of the learner's editor code (highlighted inline, like a code review). Use it whenever you talk about a particular line: bugs (error), smells (warning), suggestions (hint), things done well (ok). Replaces previous notes; empty list clears.",
+    input_schema: jsonSchema(annotateInput),
   },
   {
     name: "run_code",
@@ -277,6 +296,16 @@ export async function executeTool(name: string, input: unknown, ctx: ToolContext
       ctx.onEditorSet(next);
       ctx.emit({ type: "editor_set", editor: next });
       return { content: `Applied ${applied.length} edit(s). Editor now:\n${source}` };
+    }
+
+    case "annotate_code": {
+      const parsed = annotateInput.safeParse(input);
+      if (!parsed.success) return invalid(parsed.error);
+      const lines = ctx.editor?.source.split("\n").length ?? 0;
+      const bad = parsed.data.annotations.filter((a) => a.line > lines);
+      if (bad.length) return { content: `Lines out of range (the editor has ${lines} lines): ${bad.map((a) => a.line).join(", ")}.`, isError: true };
+      ctx.emit({ type: "annotations", items: parsed.data.annotations });
+      return { content: parsed.data.annotations.length ? `Pinned ${parsed.data.annotations.length} note(s).` : "Notes cleared." };
     }
 
     case "run_code": {

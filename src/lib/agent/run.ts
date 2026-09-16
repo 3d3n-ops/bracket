@@ -162,7 +162,13 @@ function buildUserContent(input: TurnInput, memories: string | null): Anthropic.
     ctx.push(`<board viewport="${JSON.stringify(viewport)}" total_shapes="${total}">\n${list}\n</board>`);
   }
   if (input.code) {
-    ctx.push(`<editor language="${input.code.language}">\n${input.code.source || "(empty)"}\n</editor>`);
+    const numbered = input.code.source
+      ? input.code.source
+          .split("\n")
+          .map((l, i) => `${String(i + 1).padStart(3, " ")}| ${l}`)
+          .join("\n")
+      : "(empty)";
+    ctx.push(`<editor language="${input.code.language}" note="line numbers are for reference only, not part of the code">\n${numbered}\n</editor>`);
   }
   if (input.lastRun) {
     const r = input.lastRun;

@@ -10,6 +10,7 @@ const TOOL_LABELS: Record<string, string> = {
   set_editor_code: "wrote in the editor",
   set_exercise: "created an exercise",
   edit_code: "edited the code",
+  annotate_code: "marked up the code",
   run_code: "ran code",
   set_tests: "updated tests",
   leetcode_search: "searched LeetCode",

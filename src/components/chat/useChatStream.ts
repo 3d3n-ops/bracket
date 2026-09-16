@@ -13,6 +13,7 @@ const TOOL_LABELS: Record<string, string> = {
   set_editor_code: "writing in the editor",
   set_exercise: "creating an exercise",
   edit_code: "editing the code",
+  annotate_code: "marking up the code",
   run_code: "running code",
   set_tests: "updating tests",
   leetcode_search: "searching LeetCode",
@@ -94,6 +95,10 @@ export function useChatStream() {
               break;
             case "exercise_set":
               st.setProblem(ev.problem, ev.language);
+              break;
+            case "annotations":
+              st.setAnnotations(ev.items);
+              st.toggleSidebar(true);
               break;
             case "error":
               st.updateMessage(assistantId, { error: ev.message });

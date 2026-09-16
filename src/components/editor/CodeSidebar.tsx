@@ -23,6 +23,8 @@ export function CodeSidebar() {
   const running = useWorkspace((s) => s.running);
   const setRunning = useWorkspace((s) => s.setRunning);
   const setLastRun = useWorkspace((s) => s.setLastRun);
+  const annotations = useWorkspace((s) => s.annotations);
+  const setAnnotations = useWorkspace((s) => s.setAnnotations);
   const [status, setStatus] = useState<string | null>(null);
   const dragging = useRef(false);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -133,6 +135,15 @@ export function CodeSidebar() {
               </span>
             )}
             <div className="flex-1" />
+            {annotations.length > 0 && (
+              <button
+                onClick={() => setAnnotations([])}
+                className="rounded-md px-2 py-1 text-xs text-indigo-300 hover:bg-white/10"
+                title="Clear the tutor's notes"
+              >
+                Clear {annotations.length} note{annotations.length > 1 ? "s" : ""}
+              </button>
+            )}
             <button
               onClick={resetCode}
               className="rounded-md px-2 py-1 text-xs text-zinc-400 hover:bg-white/10"
@@ -150,7 +161,12 @@ export function CodeSidebar() {
             </button>
           </div>
           <div className="min-h-0 flex-1">
-            <CodeEditor language={editor.language} value={editor.source} onChange={(source) => setCode({ source })} />
+            <CodeEditor
+              language={editor.language}
+              value={editor.source}
+              onChange={(source) => setCode({ source })}
+              annotations={annotations}
+            />
           </div>
           <OutputPanel status={status} />
         </>

@@ -2,6 +2,7 @@ import { create } from "zustand";
 import type { Editor } from "tldraw";
 import type { EditorState, Language, Problem, Session } from "@/lib/db/schema";
 import type { RunResult } from "@/lib/runner/types";
+import type { CodeAnnotation } from "@/lib/editor/annotations";
 
 export type ChatMessage = {
   id: string;
@@ -27,6 +28,8 @@ type WorkspaceState = {
   drafts: Partial<Record<Language, string>>;
   lastRun: RunResult | null;
   running: boolean;
+  /** Tutor review notes pinned to editor lines. */
+  annotations: CodeAnnotation[];
 
   sidebarOpen: boolean;
   sidebarWidth: number; // px
@@ -50,6 +53,7 @@ type WorkspaceState = {
   setLanguage: (l: Language) => void;
   resetCode: () => void;
   setLastRun: (r: RunResult | null) => void;
+  setAnnotations: (a: CodeAnnotation[]) => void;
   setRunning: (v: boolean) => void;
   toggleSidebar: (v?: boolean) => void;
   setSidebarWidth: (w: number) => void;
@@ -71,6 +75,7 @@ export const useWorkspace = create<WorkspaceState>((set) => ({
   drafts: {},
   lastRun: null,
   running: false,
+  annotations: [],
   sidebarOpen: false,
   sidebarWidth: 0,
   chatPanel: { x: 24, y: 80, w: 400, h: 520 },
@@ -107,6 +112,7 @@ export const useWorkspace = create<WorkspaceState>((set) => ({
         editor: { language, source: starter },
         drafts: {},
         lastRun: null,
+        annotations: [],
         sidebarOpen: true,
       };
     }),
@@ -119,14 +125,17 @@ export const useWorkspace = create<WorkspaceState>((set) => ({
         drafts,
         editor: { language, source: drafts[language] ?? s.problem?.starterCode?.[language] ?? "" },
         lastRun: null,
+        annotations: [],
       };
     }),
   resetCode: () =>
     set((s) => ({
       editor: { language: s.editor.language, source: s.problem?.starterCode?.[s.editor.language] ?? "" },
       lastRun: null,
+      annotations: [],
     })),
   setLastRun: (lastRun) => set({ lastRun }),
+  setAnnotations: (annotations) => set({ annotations }),
   setRunning: (running) => set({ running }),
   toggleSidebar: (v) => set((s) => ({ sidebarOpen: v ?? !s.sidebarOpen })),
   setSidebarWidth: (sidebarWidth) => set({ sidebarWidth }),

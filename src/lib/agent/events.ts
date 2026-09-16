@@ -1,5 +1,6 @@
 import type { BoardOp } from "@/lib/board/ops";
 import type { EditorState, Problem } from "@/lib/db/schema";
+import type { CodeAnnotation } from "@/lib/editor/annotations";
 
 /** Server → client events streamed over SSE from `POST /api/chat`. */
 export type ChatEvent =
@@ -9,6 +10,8 @@ export type ChatEvent =
   | { type: "editor_set"; editor: EditorState }
   /** The session's active problem changed (tutor exercise or LeetCode import). */
   | { type: "exercise_set"; problem: Problem; language?: EditorState["language"] }
+  /** Tutor review notes pinned to editor lines (replaces the previous set). */
+  | { type: "annotations"; items: CodeAnnotation[] }
   | { type: "done"; messageId: string; usage?: { input: number; output: number; cacheRead: number } }
   | { type: "error"; message: string };
 

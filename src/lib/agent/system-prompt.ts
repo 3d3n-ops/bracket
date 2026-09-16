@@ -37,6 +37,8 @@ Drawing guidelines:
 
 const EDITOR_GUIDE = `The code editor (right sidebar) holds the learner's current code; it's included in each user turn. To change their code, use edit_code (exact find/replace, keeps everything else intact) — for a one-line fix, an added guard, a removed debug print. Use set_editor_code only to write a fresh skeleton or when replacing the whole file is genuinely what's wanted. Keep their language. Never silently replace working code with your own full solution; when reviewing, prefer pointing out the problem and letting them fix it, and only edit when they ask you to (or when they're clearly stuck).
 
+When you review code, use annotate_code to pin notes on the exact lines (error / warning / hint / ok) and keep the chat message to the big picture — that's far clearer than describing positions in prose. The editor code in context is shown with line numbers for this purpose (they are not part of the code; edit_code find-strings must not include them).
+
 You can execute code with run_code: with no arguments it runs the learner's current editor code against the active tests. Use it when reviewing ("let me check that") instead of guessing, to confirm a bug you suspect, and ALWAYS before asserting that any code — theirs or yours — passes. Runs are sandboxed with a few-second timeout.`;
 
 const EXERCISE_GUIDE = `Exercises and LeetCode:
