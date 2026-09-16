@@ -57,6 +57,19 @@ src/
   content/        problem bank (DSA + system design)
 ```
 
+## What the tutor can do with your code
+
+| Tool | What it does |
+|---|---|
+| sees your editor + last run | every turn carries the editor contents (line-numbered) and the latest test results |
+| `annotate_code` | pins review notes to exact lines in CodeMirror (error / warning / hint / ok) |
+| `edit_code` | exact find/replace edits — fixes one line, leaves the rest alone |
+| `set_editor_code` | writes a fresh skeleton / harness (whole file) |
+| `run_code` | executes code **server-side** (Node worker for JS, Pyodide-in-Node for Python) — checks your code without you pressing Run, verifies its own fixes |
+| `set_exercise` / `set_tests` | authors exercises whose tests are validated against a reference solution before you ever see them |
+
+Server runs are sandboxed in worker threads with timeouts (5 s JS, 15 s Python); a hung Python worker is replaced.
+
 ## LeetCode: API, not MCP
 
 LeetCode has no official API, but its public GraphQL endpoint (`leetcode.com/graphql`) serves problem search, statements, `metaData`, code snippets and the daily challenge without auth (premium statements are hidden). An MCP server would only wrap that same endpoint — and Anthropic's hosted MCP connector isn't available through OpenRouter — so the integration calls GraphQL directly (`src/lib/leetcode/`).
